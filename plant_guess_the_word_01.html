@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Systems Guess-the-Word Game</title>
+  <style>
+    :root {
+      --bg: #f4f8ff;
+      --panel: #ffffff;
+      --ink: #132238;
+      --muted: #5a6b84;
+      --accent: #2b6ef3;
+      --accent-2: #0e4db7;
+      --line: #d7e2f6;
+      --good: #137a44;
+      --warn: #9f5a00;
+      --bad: #9b1c1c;
+      --plant: #2e8b57;
+      --leaf-lost: #b8c3d6;
+      --pot: #8a5636;
+      --shadow: 0 12px 32px rgba(19, 34, 56, 0.08);
+      --radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #f4f8ff 0%, #eef5ff 100%);
+      color: var(--ink);
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      padding: 24px 16px 32px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      width: min(1080px, 100%);
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 2px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 28px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.1;
+    }
+
+    .hero p {
+      margin: 0 auto 20px;
+      max-width: 720px;
+      font-size: 1.15rem;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    .start-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #eef4ff;
+      border: 2px solid #cfe0ff;
+      color: var(--accent-2);
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .screen-card {
+      padding: 22px;
+    }
+
+    .top-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .label-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      background: #eef4ff;
+      border: 2px solid #d5e2ff;
+      padding: 8px 14px;
+      font-weight: 700;
+      color: var(--accent-2);
+    }
+
+    .progress {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .prompt {
+      font-size: clamp(1.2rem, 2vw, 1.55rem);
+      font-weight: 800;
+      margin: 0 0 18px;
+    }
+
+    .sentence-panel {
+      border: 2px solid #d7e2f6;
+      border-radius: 18px;
+      padding: 18px;
+      background: #fbfdff;
+      font-size: clamp(1.3rem, 2.3vw, 1.75rem);
+      line-height: 1.9;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .plain-token {
+      white-space: pre-wrap;
+    }
+
+    .guess-wrap {
+      display: inline-flex;
+      vertical-align: middle;
+      margin: 0 4px;
+    }
+
+    .guess-chip {
+      display: inline-flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      min-width: 150px;
+      padding: 10px 10px 12px;
+      border-radius: 16px;
+      border: 2px solid #bfd2ff;
+      background: #f4f8ff;
+    }
+
+    .guess-chip.future {
+      background: #f8fbff;
+      border-color: #d6e2f5;
+    }
+
+    .guess-chip.solved {
+      background: #eefaf2;
+      border-color: #bfe6cb;
+    }
+
+    .guess-chip.fail {
+      background: #fff2f2;
+      border-color: #f1c6c6;
+      animation: pulse 0.9s infinite;
+    }
+
+    .clue {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      color: var(--accent-2);
+      min-height: 1.25em;
+      text-transform: lowercase;
+    }
+
+    .solved-word {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--good);
+      background: #e7f7ed;
+      border-radius: 10px;
+      padding: 4px 10px;
+    }
+
+    .flash-word {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--bad);
+      background: #ffe3e3;
+      border-radius: 10px;
+      padding: 4px 10px;
+    }
+
+    .guess-input {
+      width: min(180px, 26vw);
+      min-width: 120px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 2px solid #9dbcf8;
+      font-size: 1rem;
+      font-weight: 700;
+      text-align: center;
+      color: var(--ink);
+      background: white;
+    }
+
+    .guess-input:focus {
+      outline: 3px solid rgba(43, 110, 243, 0.18);
+      border-color: var(--accent);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-top: 16px;
+    }
+
+    .button {
+      appearance: none;
+      border: 0;
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 800;
+      padding: 14px 18px;
+      min-height: 52px;
+      transition: transform 0.12s ease, background 0.12s ease, opacity 0.12s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+    }
+
+    .button:active {
+      transform: translateY(0);
+    }
+
+    .button.primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .button.primary:hover {
+      background: var(--accent-2);
+    }
+
+    .button.secondary {
+      background: #edf3ff;
+      color: var(--accent-2);
+      border: 2px solid #cfe0ff;
+    }
+
+    .button.secondary:hover {
+      background: #e4edff;
+    }
+
+    .button.ghost {
+      background: #f8fafc;
+      color: var(--ink);
+      border: 2px solid #d7e2f6;
+    }
+
+    .button[disabled] {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .feedback {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 2px solid #dce7f8;
+      background: #f7fbff;
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.5;
+      min-height: 56px;
+    }
+
+    .feedback.good {
+      border-color: #bfe6cb;
+      background: #eefaf2;
+      color: var(--good);
+    }
+
+    .feedback.warn {
+      border-color: #f2d2a9;
+      background: #fff7eb;
+      color: var(--warn);
+    }
+
+    .feedback.bad {
+      border-color: #f1c6c6;
+      background: #fff2f2;
+      color: var(--bad);
+    }
+
+    .side-card {
+      padding: 20px;
+      position: sticky;
+      top: 18px;
+    }
+
+    .side-card h2 {
+      margin: 0 0 12px;
+      font-size: 1.2rem;
+    }
+
+    .mini {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 0.98rem;
+      line-height: 1.45;
+    }
+
+    .plant-frame {
+      border: 2px solid #d7e2f6;
+      border-radius: 18px;
+      padding: 16px;
+      background: linear-gradient(180deg, #fbfffd 0%, #f4fbf6 100%);
+    }
+
+    .plant-stage {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .leaf {
+      font-size: 1.8rem;
+      line-height: 1;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.08));
+    }
+
+    .leaf.lost {
+      opacity: 0.45;
+      filter: grayscale(1);
+    }
+
+    .plant-display {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin: 12px 0 8px;
+    }
+
+    .stem {
+      width: 8px;
+      height: 68px;
+      border-radius: 99px;
+      background: linear-gradient(180deg, #47a66f 0%, #2d8c56 100%);
+      position: relative;
+    }
+
+    .stem::before,
+    .stem::after {
+      content: "";
+      position: absolute;
+      width: 44px;
+      height: 16px;
+      background: linear-gradient(90deg, #4db576 0%, #2a8f55 100%);
+      border-radius: 999px 999px 999px 0;
+      top: 18px;
+    }
+
+    .stem::before {
+      left: -38px;
+      transform: rotate(-25deg);
+    }
+
+    .stem::after {
+      right: -38px;
+      transform: scaleX(-1) rotate(-25deg);
+    }
+
+    .plant-top {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .plant-face {
+      width: 84px;
+      height: 84px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-size: 2.2rem;
+      border: 3px solid #d7e2f6;
+      background: linear-gradient(180deg, #f6fff8 0%, #ebfff0 100%);
+      box-shadow: 0 8px 18px rgba(19, 34, 56, 0.08);
+    }
+
+    .plant-face.calm {
+      background: linear-gradient(180deg, #f6fff8 0%, #ebfff0 100%);
+    }
+
+    .plant-face.worried {
+      background: linear-gradient(180deg, #fff9ef 0%, #fff0d8 100%);
+    }
+
+    .plant-face.crying {
+      background: linear-gradient(180deg, #fff3f3 0%, #ffe0e0 100%);
+    }
+
+    .plant-face.dead {
+      background: linear-gradient(180deg, #f6f1ff 0%, #ece2ff 100%);
+    }
+
+    .face-caption {
+      font-size: 0.98rem;
+      font-weight: 800;
+      text-align: center;
+      color: var(--muted);
+      min-height: 1.4em;
+    }
+
+    .pot {
+      width: 110px;
+      height: 56px;
+      background: linear-gradient(180deg, #a06541 0%, #7d4e33 100%);
+      border-radius: 10px 10px 18px 18px;
+      position: relative;
+    }
+
+    .pot::before {
+      content: "";
+      position: absolute;
+      top: -10px;
+      left: -6px;
+      right: -6px;
+      height: 14px;
+      background: linear-gradient(180deg, #b17652 0%, #8a5636 100%);
+      border-radius: 14px;
+    }
+
+    .plant-fail {
+      display: grid;
+      place-items: center;
+      min-height: 170px;
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: var(--bad);
+      text-align: center;
+      line-height: 1.45;
+      padding: 12px;
+      background: #fff4f4;
+      border: 2px dashed #efc1c1;
+      border-radius: 16px;
+    }
+
+    .tracker {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    details.help {
+      margin-top: 18px;
+      border: 2px solid #d7e2f6;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fbfdff;
+    }
+
+    details.help summary {
+      cursor: pointer;
+      padding: 14px 16px;
+      font-weight: 800;
+      list-style: none;
+      user-select: none;
+    }
+
+    details.help summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .help-body {
+      border-top: 2px solid #e4ecfb;
+      padding: 0 16px 16px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.98rem;
+    }
+
+    .help-body p {
+      margin: 12px 0 0;
+    }
+
+    .complete-list {
+      margin: 16px auto 0;
+      max-width: 720px;
+      text-align: left;
+      background: #fbfdff;
+      border: 2px solid #d7e2f6;
+      border-radius: 18px;
+      padding: 16px 18px;
+    }
+
+    .complete-list h2 {
+      margin: 0 0 10px;
+      font-size: 1.2rem;
+    }
+
+    .complete-list ul {
+      margin: 0;
+      padding-left: 20px;
+      line-height: 1.7;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
+
+    @media (max-width: 900px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .side-card {
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .app-shell {
+        padding: 16px 10px 24px;
+      }
+
+      .screen-card,
+      .side-card,
+      .hero {
+        padding: 18px;
+      }
+
+      .sentence-panel {
+        font-size: 1.2rem;
+        line-height: 1.8;
+      }
+
+      .guess-chip {
+        min-width: 132px;
+      }
+
+      .guess-input {
+        width: min(160px, 52vw);
+      }
+
+      .controls {
+        align-items: stretch;
+      }
+
+      .button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="app" class="app" aria-live="polite"></div>
+  </div>
+
+  <script>
+    const GAME_TITLE = "Systems Guess-the-Word Game";
+    const RAW_SCREENS = [{"label": "Screen 1", "prompt": "Type the missing science word.", "sentence": "A system is made up of different parts.", "targets": ["system"], "demeritText": "A part of a plant is ripped away as it cries.", "failText": "The soul of the plant leaves."}, {"label": "Screen 2", "prompt": "Type the missing science word.", "sentence": "A system is made up of different parts.", "targets": ["parts"], "demeritText": "A part of a plant is ripped away as it cries.", "failText": "The soul of the plant leaves."}, {"label": "Screen 3", "prompt": "Type the missing science word.", "sentence": "Each part in a system has its own function.", "targets": ["system"], "demeritText": "A part of a plant is ripped away as it cries.", "failText": "The plant wilts and dies."}, {"label": "Screen 4", "prompt": "Type the missing science word.", "sentence": "Each part in a system has its own function.", "targets": ["part"], "demeritText": "A part of a plant is ripped away as it cries.", "failText": "The plant wilts and dies."}, {"label": "Screen 5", "prompt": "Type the missing science word.", "sentence": "Each part in a system has its own function.", "targets": ["function"], "demeritText": "A part of a plant is ripped away as it cries.", "failText": "The plant wilts and dies."}, {"label": "Screen 6", "prompt": "Type the missing science word.", "sentence": "When one part of the system stops functioning, the function of the whole system will be affected.", "targets": ["function"], "demeritText": "A part of a plant is ripped away as it cries.", "failText": "The plant wilts and dies."}];
+    const FLASH_DURATION_MS = 10000;
+
+    const state = {
+      view: "intro",
+      screenIndex: 0,
+      screens: [],
+      currentInput: "",
+      feedback: "",
+      feedbackTone: "warn"
+    };
+
+    function normalizeWord(text) {
+      return (text || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/gi, "");
+    }
+
+    function tokenize(sentence) {
+      return sentence.match(/(\s+|[A-Za-z']+|[^A-Za-z'\s]+)/g) || [];
+    }
+
+    function prepareScreens(rawScreens) {
+      return rawScreens.map(screen => {
+        const tokens = tokenize(screen.sentence);
+        const targetSet = new Set(screen.targets.map(t => normalizeWord(t)));
+        const occurrences = [];
+
+        tokens.forEach((token, tokenIndex) => {
+          const normalized = normalizeWord(token);
+          if (normalized && targetSet.has(normalized)) {
+            occurrences.push({
+              tokenIndex,
+              originalToken: token,
+              target: token,
+              solved: false,
+              fail: false,
+              wrongAttempts: 0,
+              revealedCount: 1,
+              chanceLimit: Math.max(normalized.length - 2, 1),
+              failTimerId: null
+            });
+          }
+        });
+
+        return {
+          ...screen,
+          tokens,
+          occurrences
+        };
+      });
+    }
+
+    function activeOccurrenceIndex(screen) {
+      return screen.occurrences.findIndex(o => !o.solved);
+    }
+
+    function getActiveOccurrence(screen) {
+      const index = activeOccurrenceIndex(screen);
+      if (index === -1) return null;
+      return { index, occurrence: screen.occurrences[index] };
+    }
+
+    function clueText(target, revealedCount) {
+      const clean = target.replace(/[^A-Za-z0-9]/g, "");
+      const shown = clean.slice(0, Math.max(1, revealedCount));
+      const hidden = clean
+        .slice(Math.max(1, revealedCount))
+        .split("")
+        .map(() => "_")
+        .join(" ");
+      return hidden ? `${shown} ${hidden}` : shown;
+    }
+
+    function clearSpeech() {
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    function speakText(text) {
+      if (!("speechSynthesis" in window)) return;
+      clearSpeech();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.96;
+      utterance.pitch = 1;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function currentScreen() {
+      return state.screens[state.screenIndex];
+    }
+
+    function screenSolved(screen) {
+      return screen.occurrences.every(o => o.solved);
+    }
+
+    function sentenceForReadAloud(screen) {
+      const active = getActiveOccurrence(screen);
+      return screen.tokens.map((token, tokenIndex) => {
+        const occIndex = screen.occurrences.findIndex(o => o.tokenIndex === tokenIndex);
+        if (occIndex === -1) return token;
+        const occ = screen.occurrences[occIndex];
+        if (occ.solved) return occ.originalToken;
+        if (occ.fail) return occ.originalToken;
+        return "blank";
+      }).join("");
+    }
+
+    function updateFeedback(text, tone) {
+      state.feedback = text;
+      state.feedbackTone = tone;
+    }
+
+    function startGame() {
+      state.screens = prepareScreens(RAW_SCREENS);
+      state.view = "play";
+      state.screenIndex = 0;
+      state.currentInput = "";
+      updateFeedback("Type the full missing word and tap Check.", "warn");
+      render();
+      focusActiveInput();
+    }
+
+    function restartAll() {
+      clearSpeech();
+      startGame();
+    }
+
+    function backToStart() {
+      clearSpeech();
+      state.view = "intro";
+      state.screenIndex = 0;
+      state.currentInput = "";
+      state.screens = [];
+      updateFeedback("", "warn");
+      render();
+    }
+
+    function focusActiveInput() {
+      requestAnimationFrame(() => {
+        const input = document.querySelector(".guess-input");
+        if (input && !input.disabled) {
+          input.focus();
+          input.select();
+        }
+      });
+    }
+
+    function moveNext() {
+      if (state.screenIndex < state.screens.length - 1) {
+        state.screenIndex += 1;
+        state.currentInput = "";
+        updateFeedback("Type the full missing word and tap Check.", "warn");
+        render();
+        focusActiveInput();
+      } else {
+        state.view = "complete";
+        render();
+      }
+    }
+
+    function handleInputChange(value) {
+      state.currentInput = value.replace(/\s+/g, "");
+    }
+
+    function resetFailedOccurrence(screen, occ) {
+      occ.fail = false;
+      occ.wrongAttempts = 0;
+      occ.revealedCount = 1;
+      state.currentInput = "";
+      updateFeedback("That word has reset. Try again from the first clue.", "warn");
+      render();
+      focusActiveInput();
+    }
+
+    function checkGuess() {
+      const screen = currentScreen();
+      if (!screen) return;
+
+      const active = getActiveOccurrence(screen);
+      if (!active) return;
+
+      const occ = active.occurrence;
+      if (occ.fail) return;
+
+      const guess = state.currentInput.trim();
+      if (!guess) {
+        updateFeedback("Type the full word first.", "warn");
+        render();
+        focusActiveInput();
+        return;
+      }
+
+      if (normalizeWord(guess) === normalizeWord(occ.target)) {
+        occ.solved = true;
+        occ.fail = false;
+        state.currentInput = "";
+        if (screenSolved(screen)) {
+          updateFeedback("Correct. This sentence is complete.", "good");
+        } else {
+          updateFeedback("Correct. Now solve the next missing word.", "good");
+        }
+        render();
+        focusActiveInput();
+        return;
+      }
+
+      occ.wrongAttempts += 1;
+      occ.revealedCount = Math.min(
+        normalizeWord(occ.target).length,
+        occ.revealedCount + 1
+      );
+
+      if (occ.wrongAttempts >= occ.chanceLimit) {
+        occ.fail = true;
+        updateFeedback(screen.failText, "bad");
+        render();
+
+        occ.failTimerId = window.setTimeout(() => {
+          resetFailedOccurrence(screen, occ);
+        }, FLASH_DURATION_MS);
+        return;
+      }
+
+      updateFeedback(screen.demeritText + " One more letter is now shown.", "warn");
+      render();
+      focusActiveInput();
+    }
+
+    function buildSentenceMarkup(screen) {
+      const active = getActiveOccurrence(screen);
+      const activeIndex = active ? active.index : -1;
+
+      return screen.tokens.map((token, tokenIndex) => {
+        const occIndex = screen.occurrences.findIndex(o => o.tokenIndex === tokenIndex);
+
+        if (occIndex === -1) {
+          return `<span class="plain-token">${escapeHtml(token)}</span>`;
+        }
+
+        const occ = screen.occurrences[occIndex];
+        const clue = clueText(occ.target, occ.revealedCount);
+
+        if (occ.solved) {
+          return `
+            <span class="guess-wrap">
+              <span class="guess-chip solved">
+                <span class="solved-word">${escapeHtml(occ.originalToken)}</span>
+              </span>
+            </span>
+          `;
+        }
+
+        if (occ.fail) {
+          return `
+            <span class="guess-wrap">
+              <span class="guess-chip fail">
+                <span class="flash-word">${escapeHtml(occ.originalToken)}</span>
+              </span>
+            </span>
+          `;
+        }
+
+        if (occIndex === activeIndex) {
+          const inputWidth = Math.max(120, normalizeWord(occ.target).length * 18 + 80);
+          return `
+            <span class="guess-wrap">
+              <label class="guess-chip" aria-label="Missing word input">
+                <span class="clue">${escapeHtml(clue)}</span>
+                <input
+                  id="activeGuessInput"
+                  class="guess-input"
+                  type="text"
+                  autocomplete="off"
+                  autocapitalize="none"
+                  spellcheck="false"
+                  inputmode="text"
+                  maxlength="${normalizeWord(occ.target).length + 2}"
+                  placeholder="Type full word"
+                  style="width:${inputWidth}px"
+                  value="${escapeAttribute(state.currentInput)}"
+                />
+              </label>
+            </span>
+          `;
+        }
+
+        return `
+          <span class="guess-wrap">
+            <span class="guess-chip future">
+              <span class="clue">${escapeHtml(clueText(occ.target, 1))}</span>
+            </span>
+          </span>
+        `;
+      }).join("");
+    }
+
+    function plantTrackerMarkup(screen) {
+      const active = getActiveOccurrence(screen);
+      if (!active) {
+        return `
+          <div class="plant-frame">
+            <div class="plant-display">
+              <div class="plant-top">
+                <div class="plant-face calm" aria-hidden="true">😄</div>
+                <div class="face-caption">The plant feels safe.</div>
+              </div>
+              <div class="stem" aria-hidden="true"></div>
+              <div class="pot" aria-hidden="true"></div>
+            </div>
+            <div class="feedback good" style="margin-top:12px;">All words on this screen are solved.</div>
+          </div>
+        `;
+      }
+
+      const occ = active.occurrence;
+      const total = occ.chanceLimit;
+      const used = occ.wrongAttempts;
+      const left = Math.max(total - used, 0);
+
+      if (occ.fail) {
+        return `
+          <div class="plant-frame">
+            <div class="plant-fail">
+              <div class="plant-top">
+                <div class="plant-face dead" aria-hidden="true">👻</div>
+                <div class="face-caption">The plant's soul has left.</div>
+              </div>
+              <div>🌫️<br>${escapeHtml(screen.failText)}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      const healthyLeaves = Array.from({ length: left }, () => `<span class="leaf" aria-hidden="true">🍃</span>`).join("");
+      const lostLeaves = Array.from({ length: used }, () => `<span class="leaf lost" aria-hidden="true">🍂</span>`).join("");
+
+      let faceEmoji = "😄";
+      let faceClass = "calm";
+      let faceText = "The plant feels safe.";
+
+      if (used === 0) {
+        faceEmoji = "😄";
+        faceClass = "calm";
+        faceText = "The plant feels safe.";
+      } else if (used < total) {
+        const ratio = used / total;
+        if (ratio < 0.5) {
+          faceEmoji = "😟";
+          faceClass = "worried";
+          faceText = "The plant looks worried.";
+        } else {
+          faceEmoji = "😭";
+          faceClass = "crying";
+          faceText = "The plant is crying.";
+        }
+      }
+
+      return `
+        <div class="plant-frame">
+          <div class="plant-stage">${healthyLeaves || ""}${lostLeaves || ""}</div>
+          <div class="plant-display">
+            <div class="plant-top">
+              <div class="plant-face ${faceClass}" aria-hidden="true">${faceEmoji}</div>
+              <div class="face-caption">${faceText}</div>
+            </div>
+            <div class="stem" aria-hidden="true"></div>
+            <div class="pot" aria-hidden="true"></div>
+          </div>
+          <div class="tracker">
+            <span>Wrong tries: ${used} / ${total}</span>
+            <span>Leaves left: ${left}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function escapeAttribute(text) {
+      return escapeHtml(text).replace(/`/g, "&#96;");
+    }
+
+    function renderIntro() {
+      return `
+        <section class="card hero">
+          <div class="start-badge">🔎 Guess the missing science word</div>
+          <h1>${escapeHtml(GAME_TITLE)}</h1>
+          <p>
+            Read each sentence, type the full missing word in the sentence itself,
+            and unlock the next screen when you get it right.
+          </p>
+          <button class="button primary" id="startBtn">Start game</button>
+        </section>
+      `;
+    }
+
+    function renderPlay() {
+      const screen = currentScreen();
+      const active = getActiveOccurrence(screen);
+      const screenNumber = state.screenIndex + 1;
+      const complete = screenSolved(screen);
+
+      return `
+        <div class="main-layout">
+          <section class="card screen-card">
+            <div class="top-row">
+              <div class="label-pill">${escapeHtml(screen.label)}</div>
+              <div class="progress">Screen ${screenNumber} of ${state.screens.length}</div>
+            </div>
+
+            <p class="prompt">${escapeHtml(screen.prompt)}</p>
+
+            <div class="sentence-panel" id="sentencePanel">
+              ${buildSentenceMarkup(screen)}
+            </div>
+
+            <div class="controls">
+              <button class="button primary" id="checkBtn" ${active && active.occurrence.fail ? "disabled" : ""}>
+                Check
+              </button>
+              <button class="button secondary" id="readBtn">
+                🔊 Read aloud
+              </button>
+              <button class="button ghost" id="nextBtn" ${complete ? "" : "disabled"}>
+                Next screen
+              </button>
+            </div>
+
+            <div class="feedback ${state.feedbackTone}">
+              ${escapeHtml(state.feedback)}
+            </div>
+
+            <details class="help">
+              <summary>How to play</summary>
+              <div class="help-body">
+                <p>Type the full missing word.</p>
+                <p>The first letter is shown first. A wrong non-blank answer reveals one more letter.</p>
+                <p>If all chances for the current word are used up, only that word resets after the answer flashes.</p>
+              </div>
+            </details>
+          </section>
+
+          <aside class="card side-card">
+            <h2>Plant demerit tracker</h2>
+            <p class="mini">${escapeHtml(screen.demeritText)}</p>
+            ${plantTrackerMarkup(screen)}
+            <p class="mini" style="margin-top: 12px;">
+              The tracker resets for the next word.
+            </p>
+          </aside>
+        </div>
+      `;
+    }
+
+    function renderComplete() {
+      const completedItems = state.screens.map((screen, index) => {
+        return `<li>Screen ${index + 1}: ${escapeHtml(screen.sentence)}</li>`;
+      }).join("");
+
+      return `
+        <section class="card hero">
+          <div class="start-badge">✅ Game complete</div>
+          <h1>${escapeHtml(GAME_TITLE)}</h1>
+          <p>You completed all the sentence screens.</p>
+
+          <div class="complete-list">
+            <h2>Completed screens</h2>
+            <ul>${completedItems}</ul>
+          </div>
+
+          <div class="controls" style="justify-content:center; margin-top:20px;">
+            <button class="button primary" id="restartBtn">Restart all</button>
+            <button class="button secondary" id="homeBtn">Return to start</button>
+          </div>
+        </section>
+      `;
+    }
+
+    function render() {
+      const app = document.getElementById("app");
+      if (!app) return;
+
+      if (state.view === "intro") {
+        app.innerHTML = renderIntro();
+      } else if (state.view === "play") {
+        app.innerHTML = renderPlay();
+      } else {
+        app.innerHTML = renderComplete();
+      }
+
+      bindEvents();
+    }
+
+    function bindEvents() {
+      const startBtn = document.getElementById("startBtn");
+      if (startBtn) {
+        startBtn.addEventListener("click", startGame);
+      }
+
+      const restartBtn = document.getElementById("restartBtn");
+      if (restartBtn) {
+        restartBtn.addEventListener("click", restartAll);
+      }
+
+      const homeBtn = document.getElementById("homeBtn");
+      if (homeBtn) {
+        homeBtn.addEventListener("click", backToStart);
+      }
+
+      const checkBtn = document.getElementById("checkBtn");
+      if (checkBtn) {
+        checkBtn.addEventListener("click", checkGuess);
+      }
+
+      const nextBtn = document.getElementById("nextBtn");
+      if (nextBtn) {
+        nextBtn.addEventListener("click", moveNext);
+      }
+
+      const readBtn = document.getElementById("readBtn");
+      if (readBtn) {
+        readBtn.addEventListener("click", () => {
+          if (state.view === "play") {
+            const screen = currentScreen();
+            const text = [
+              GAME_TITLE,
+              screen.label,
+              screen.prompt,
+              sentenceForReadAloud(screen),
+              state.feedback
+            ].filter(Boolean).join(". ");
+            speakText(text);
+          } else if (state.view === "intro") {
+            speakText(`${GAME_TITLE}. Read each sentence and type the missing science word.`);
+          } else {
+            speakText(`${GAME_TITLE}. You completed all screens.`);
+          }
+        });
+      }
+
+      const input = document.getElementById("activeGuessInput");
+      if (input) {
+        input.addEventListener("input", (event) => {
+          handleInputChange(event.target.value);
+        });
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            checkGuess();
+          }
+        });
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>

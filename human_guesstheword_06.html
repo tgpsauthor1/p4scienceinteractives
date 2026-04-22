@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Digestive System Guess the Word</title>
+<style>
+  :root {
+    --bg1:#fff8ef;
+    --bg2:#eef8ff;
+    --ink:#1f2937;
+    --muted:#5b6472;
+    --accent:#0f766e;
+    --accent2:#f59e0b;
+    --panel:#ffffff;
+    --line:#d7dce5;
+    --ok:#157f46;
+    --warn:#d97706;
+    --danger:#dc2626;
+    --shadow:0 16px 40px rgba(15, 23, 42, 0.12);
+    --radius:24px;
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0;
+    font-family: "Trebuchet MS", "Avenir Next", Arial, sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at top left, #fff2c6 0 18%, transparent 19%),
+      radial-gradient(circle at bottom right, #dff6ff 0 16%, transparent 17%),
+      linear-gradient(135deg, var(--bg1), var(--bg2));
+    min-height:100vh;
+  }
+  .app {
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .shell {
+    width:min(1100px, 100%);
+    background:rgba(255,255,255,0.86);
+    backdrop-filter: blur(6px);
+    border:1px solid rgba(255,255,255,0.7);
+    box-shadow:var(--shadow);
+    border-radius:28px;
+    overflow:hidden;
+  }
+  .topbar {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    padding:16px 20px;
+    background:linear-gradient(90deg, #0f766e, #0ea5a4);
+    color:white;
+  }
+  .topbar h1 {
+    margin:0;
+    font-size:clamp(24px, 3vw, 36px);
+    line-height:1.1;
+  }
+  .topbar .sub {
+    font-size:14px;
+    opacity:0.92;
+    margin-top:4px;
+  }
+  .screen {
+    padding:22px;
+  }
+  .intro,
+  .complete {
+    display:grid;
+    gap:18px;
+    align-items:start;
+  }
+  .hero {
+    display:grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap:20px;
+  }
+  .panel {
+    background:var(--panel);
+    border:1px solid #eef2f7;
+    border-radius:var(--radius);
+    box-shadow:0 10px 24px rgba(15, 23, 42, 0.06);
+    padding:20px;
+  }
+  .title {
+    font-size:clamp(22px, 3vw, 34px);
+    margin:0 0 8px;
+  }
+  .lead {
+    font-size:18px;
+    line-height:1.5;
+    color:var(--muted);
+    margin:0;
+  }
+  .button-row {
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  button {
+    border:none;
+    border-radius:18px;
+    padding:14px 18px;
+    font-size:18px;
+    font-weight:700;
+    cursor:pointer;
+    color:#083344;
+    background:#ccfbf1;
+    transition:transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    box-shadow:0 8px 18px rgba(15, 118, 110, 0.15);
+  }
+  button:hover { transform:translateY(-1px); }
+  button:active { transform:translateY(0); }
+  button.primary {
+    background:linear-gradient(180deg, #fef3c7, #fbbf24);
+    color:#7c2d12;
+  }
+  button.secondary {
+    background:#e0f2fe;
+    color:#0c4a6e;
+  }
+  button.ghost {
+    background:#f8fafc;
+    color:#334155;
+  }
+  button:disabled {
+    opacity:0.5;
+    cursor:not-allowed;
+    transform:none;
+    box-shadow:none;
+  }
+  .layout {
+    display:grid;
+    grid-template-columns: minmax(0,1fr) 270px;
+    gap:18px;
+    align-items:start;
+  }
+  .sentence-card {
+    min-height:290px;
+  }
+  .meta-row {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+  .chip {
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 14px;
+    border-radius:999px;
+    background:#f0fdfa;
+    color:#115e59;
+    font-weight:700;
+    font-size:15px;
+  }
+  .prompt {
+    font-size:clamp(22px, 2.8vw, 30px);
+    font-weight:800;
+    margin:8px 0 14px;
+  }
+  .sentence-box {
+    border:2px dashed #d6e7e8;
+    background:linear-gradient(180deg, #fcfffe, #f7fbff);
+    border-radius:22px;
+    padding:18px 16px;
+    font-size:clamp(23px, 2.9vw, 31px);
+    line-height:2.1;
+    min-height:160px;
+  }
+  .text-token {
+    white-space:pre-wrap;
+  }
+  .occ {
+    display:inline-flex;
+    flex-direction:column;
+    align-items:center;
+    vertical-align:middle;
+    gap:6px;
+    margin:0 3px;
+    min-width:88px;
+  }
+  .occ.future { gap:0; }
+  .clue {
+    display:inline-flex;
+    align-items:flex-end;
+    gap:3px;
+    white-space:nowrap;
+  }
+  .clue .char {
+    min-width:0.75em;
+    text-align:center;
+    font-weight:800;
+    color:#0f172a;
+  }
+  .clue .line {
+    width:0.78em;
+    height:0.16em;
+    border-radius:999px;
+    background:#0f172a;
+    transform:translateY(-0.12em);
+    opacity:0.75;
+  }
+  .guess-input {
+    width:min(170px, 28vw);
+    max-width:100%;
+    font-size:20px;
+    padding:10px 12px;
+    border-radius:14px;
+    border:2px solid #99f6e4;
+    text-align:center;
+    font-weight:700;
+    color:#134e4a;
+    background:white;
+  }
+  .guess-input:focus {
+    outline:none;
+    border-color:#14b8a6;
+    box-shadow:0 0 0 4px rgba(20,184,166,0.15);
+  }
+  .solved {
+    background:#dcfce7;
+    color:#166534;
+    padding:7px 12px;
+    border-radius:16px;
+    font-weight:800;
+    box-shadow: inset 0 0 0 2px rgba(22,101,52,0.08);
+  }
+  .flashing {
+    background:#fee2e2;
+    color:#991b1b;
+    padding:7px 12px;
+    border-radius:16px;
+    font-weight:900;
+    animation: flashWord 0.85s ease-in-out infinite;
+  }
+  @keyframes flashWord {
+    0%,100% { transform:scale(1); opacity:1; }
+    50% { transform:scale(1.08); opacity:0.35; }
+  }
+  .feedback {
+    min-height:32px;
+    margin:12px 0 4px;
+    font-size:18px;
+    font-weight:700;
+  }
+  .feedback.ok { color:var(--ok); }
+  .feedback.warn { color:var(--warn); }
+  .feedback.neutral { color:#475569; }
+  .action-row {
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-top:12px;
+  }
+  .aside {
+    display:grid;
+    gap:14px;
+  }
+  .penalty-card {
+    min-height:210px;
+    display:grid;
+    align-content:start;
+    gap:12px;
+  }
+  .penalty-stage {
+    background:linear-gradient(180deg, #fffdf7, #fff7ed);
+    border-radius:22px;
+    padding:14px;
+    min-height:150px;
+    display:grid;
+    gap:10px;
+  }
+  .tracker-top {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+  }
+  .face {
+    width:88px;
+    height:88px;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    background:radial-gradient(circle at 30% 28%, #fff7cc 0 18%, #fde68a 19% 70%, #fbbf24 71% 100%);
+    border:3px solid #f59e0b;
+    box-shadow: inset 0 6px 0 rgba(255,255,255,0.35), 0 8px 18px rgba(217,119,6,0.16);
+    transform-origin:center;
+  }
+  .face.stage-3,
+  .face.stage-4 { animation:tilt 1.8s ease-in-out infinite; }
+  .face.stage-5,
+  .face.stage-6,
+  .face.stage-7 { animation:wobble 1.1s ease-in-out infinite; }
+  .face.stage-8 {
+    background:radial-gradient(circle at 30% 28%, #fff1f2 0 18%, #fecaca 19% 70%, #f87171 71% 100%);
+    border-color:#dc2626;
+    animation:pop 0.9s step-end infinite;
+  }
+  .face-text {
+    font-size:28px;
+    font-weight:900;
+    line-height:1;
+    letter-spacing:-1px;
+    color:#1f2937;
+    transform:translateY(-1px);
+    user-select:none;
+  }
+  @keyframes tilt {
+    0%, 100% { transform:rotate(0deg); }
+    25% { transform:rotate(-5deg); }
+    75% { transform:rotate(5deg); }
+  }
+  @keyframes wobble {
+    0%, 100% { transform:rotate(0deg) scale(1); }
+    20% { transform:rotate(-7deg) scale(1.03); }
+    50% { transform:rotate(0deg) scale(0.98); }
+    80% { transform:rotate(7deg) scale(1.03); }
+  }
+  @keyframes pop {
+    0%, 100% { transform:scale(1); opacity:1; }
+    50% { transform:scale(1.08); opacity:0.7; }
+  }
+  .food-row {
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+    min-height:56px;
+  }
+  .food {
+    width:30px;
+    height:24px;
+    border-radius:10px 10px 12px 12px;
+    background:linear-gradient(180deg, #fb923c, #f97316);
+    position:relative;
+    transition:opacity 0.25s ease, transform 0.25s ease, filter 0.25s ease;
+    box-shadow: inset 0 3px 0 rgba(255,255,255,0.35);
+  }
+  .food::before {
+    content:"";
+    position:absolute;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#fef3c7;
+    right:4px;
+    top:7px;
+    box-shadow:-9px -2px 0 #fde68a;
+  }
+  .food.lost {
+    opacity:0.08;
+    transform:translateY(-10px) scale(0.8);
+    filter:grayscale(1);
+  }
+  .tray {
+    position:relative;
+    border-radius:18px;
+    background:linear-gradient(180deg, #fef3c7, #fde68a);
+    min-height:62px;
+    padding:14px 12px;
+    overflow:hidden;
+    border:2px solid #fcd34d;
+  }
+  .bird {
+    position:absolute;
+    right:-70px;
+    top:2px;
+    font-size:42px;
+    opacity:0;
+  }
+  .bird.fly {
+    animation:swoop 2.2s ease-in-out infinite;
+    opacity:1;
+  }
+  @keyframes swoop {
+    0% { transform:translateX(0) translateY(-6px) rotate(-8deg); opacity:0; }
+    15% { opacity:1; }
+    55% { transform:translateX(-110px) translateY(10px) rotate(3deg); opacity:1; }
+    100% { transform:translateX(-165px) translateY(-8px) rotate(-10deg); opacity:0; }
+  }
+  .mini-note {
+    font-size:13px;
+    color:#64748b;
+    min-height:18px;
+  }
+  details {
+    border:1px solid #e5eef7;
+    background:#ffffff;
+    border-radius:20px;
+    overflow:hidden;
+  }
+  details summary {
+    list-style:none;
+    cursor:pointer;
+    padding:14px 16px;
+    font-weight:800;
+    font-size:18px;
+    background:#f8fafc;
+    position:relative;
+  }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::after {
+    content:"▾";
+    position:absolute;
+    right:16px;
+    top:14px;
+    font-size:18px;
+    transition:transform 0.2s ease;
+  }
+  details[open] summary::after {
+    transform:rotate(180deg);
+  }
+  .details-body {
+    padding:14px 16px 16px;
+  }
+  .visual-wrap {
+    min-height:190px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(180deg, #fcfffe, #f7fbff);
+    border-radius:18px;
+    border:1px solid #eef2ff;
+    padding:8px;
+  }
+  .helper {
+    font-size:16px;
+    color:var(--muted);
+    line-height:1.45;
+    margin-top:10px;
+  }
+  .howto p {
+    margin:0;
+    color:#475569;
+    line-height:1.55;
+    font-size:16px;
+  }
+  .footer-tools {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-top:14px;
+  }
+  .progressbar {
+    width:100%;
+    height:12px;
+    background:#e2e8f0;
+    border-radius:999px;
+    overflow:hidden;
+  }
+  .progressbar > div {
+    height:100%;
+    background:linear-gradient(90deg, #14b8a6, #f59e0b);
+    border-radius:999px;
+    transition:width 0.25s ease;
+  }
+  .grid-finish {
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
+    gap:10px;
+  }
+  .finish-chip {
+    padding:12px 14px;
+    border-radius:16px;
+    background:#f0fdf4;
+    border:1px solid #d1fae5;
+    text-align:center;
+    font-weight:800;
+    color:#166534;
+  }
+  .sr-only {
+    position:absolute;
+    width:1px;
+    height:1px;
+    padding:0;
+    margin:-1px;
+    overflow:hidden;
+    clip:rect(0,0,0,0);
+    white-space:nowrap;
+    border:0;
+  }
+  svg {
+    max-width:100%;
+    height:auto;
+  }
+  .pellet {
+    animation:floatPellet 2.2s ease-in-out infinite;
+  }
+  @keyframes floatPellet {
+    0%,100% { transform:translateY(0px); }
+    50% { transform:translateY(-4px); }
+  }
+  .dot-flow {
+    animation:dotFlow 3s linear infinite;
+  }
+  @keyframes dotFlow {
+    from { stroke-dashoffset: 72; }
+    to { stroke-dashoffset: 0; }
+  }
+  .pulse-line {
+    animation:pulseLine 2.2s ease-in-out infinite;
+    transform-origin:center;
+  }
+  @keyframes pulseLine {
+    0%,100% { transform:scaleX(1); }
+    50% { transform:scaleX(1.08); }
+  }
+  .squeeze1 { animation:squeeze 1.8s ease-in-out infinite; }
+  .squeeze2 { animation:squeeze 1.8s ease-in-out 0.3s infinite; }
+  .squeeze3 { animation:squeeze 1.8s ease-in-out 0.6s infinite; }
+  @keyframes squeeze {
+    0%,100% { transform:scaleY(1); }
+    35% { transform:scaleY(0.65); }
+    55% { transform:scaleY(1.05); }
+  }
+  .drop {
+    animation:drip 2.3s ease-in-out infinite;
+  }
+  .drop.d2 { animation-delay:0.35s; }
+  .drop.d3 { animation-delay:0.7s; }
+  @keyframes drip {
+    0%,100% { transform:translateY(0px); opacity:0.85; }
+    50% { transform:translateY(7px); opacity:1; }
+  }
+  .swirl {
+    transform-origin:center;
+    animation:swirl 5s linear infinite;
+  }
+  @keyframes swirl {
+    from { transform:rotate(0deg); }
+    to { transform:rotate(360deg); }
+  }
+  .wiggle {
+    transform-origin:center;
+    animation:wiggle 3.6s ease-in-out infinite;
+  }
+  @keyframes wiggle {
+    0%,100% { transform:rotate(0deg); }
+    25% { transform:rotate(-3deg); }
+    75% { transform:rotate(3deg); }
+  }
+  @media (max-width: 900px) {
+    .hero, .layout {
+      grid-template-columns:1fr;
+    }
+    .aside {
+      grid-template-columns:1fr;
+    }
+    .screen {
+      padding:16px;
+    }
+    .topbar {
+      padding:14px 16px;
+    }
+    .sentence-box {
+      line-height:1.9;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell" id="appShell">
+    <div class="topbar">
+      <div>
+        <h1>Digestive System Guess the Word</h1>
+        <div class="sub">Sentence order changes each time you restart.</div>
+      </div>
+      <div class="chip" id="topProgress">Ready</div>
+    </div>
+    <div id="screenHost"></div>
+  </div>
+</div>
+
+<script>
+const rawScreens = [{"id": 1, "label": "Sentence 1", "prompt": "Type the missing science word.", "sentence": "The gullet helps to transport food from the mouth to the stomach.", "targets": ["gullet"], "visualKey": "transport"}, {"id": 2, "label": "Sentence 2", "prompt": "Type the missing science word.", "sentence": "The gullet helps to transport food from the mouth to the stomach.", "targets": ["transport"], "visualKey": "transport"}, {"id": 3, "label": "Sentence 3", "prompt": "Type the missing science word.", "sentence": "The gullet helps to transport food from the mouth to the stomach.", "targets": ["mouth"], "visualKey": "transport"}, {"id": 4, "label": "Sentence 4", "prompt": "Type the missing science word.", "sentence": "The gullet helps to transport food from the mouth to the stomach.", "targets": ["stomach"], "visualKey": "transport"}, {"id": 5, "label": "Sentence 5", "prompt": "Type the missing science word.", "sentence": "The gullet is made of muscles that help to push the food from the mouth to the stomach.", "targets": ["gullet"], "visualKey": "muscles"}, {"id": 6, "label": "Sentence 6", "prompt": "Type the missing science word.", "sentence": "The gullet is made of muscles that help to push the food from the mouth to the stomach.", "targets": ["muscles"], "visualKey": "muscles"}, {"id": 7, "label": "Sentence 7", "prompt": "Type the missing science word.", "sentence": "The gullet is made of muscles that help to push the food from the mouth to the stomach.", "targets": ["push"], "visualKey": "muscles"}, {"id": 8, "label": "Sentence 8", "prompt": "Type the missing science word.", "sentence": "The gullet is made of muscles that help to push the food from the mouth to the stomach.", "targets": ["mouth", "stomach"], "visualKey": "muscles"}, {"id": 9, "label": "Sentence 9", "prompt": "Type the missing science word.", "sentence": "The mouth, stomach, and small intestine contain digestive juices for digestion.", "targets": ["mouth"], "visualKey": "juices"}, {"id": 10, "label": "Sentence 10", "prompt": "Type the missing science word.", "sentence": "The mouth, stomach, and small intestine contain digestive juices for digestion.", "targets": ["stomach"], "visualKey": "juices"}, {"id": 11, "label": "Sentence 11", "prompt": "Type the missing science word.", "sentence": "The mouth, stomach, and small intestine contain digestive juices for digestion.", "targets": ["small", "intestine"], "visualKey": "juices"}, {"id": 12, "label": "Sentence 12", "prompt": "Type the missing science word.", "sentence": "The mouth, stomach, and small intestine contain digestive juices for digestion.", "targets": ["digestive", "juices"], "visualKey": "juices"}, {"id": 13, "label": "Sentence 13", "prompt": "Type the missing science word.", "sentence": "The stomach holds the food for a few hours and mix the food with digestive juices so that digestion can occur.", "targets": ["stomach"], "visualKey": "mixing"}, {"id": 14, "label": "Sentence 14", "prompt": "Type the missing science word.", "sentence": "The stomach holds the food for a few hours and mix the food with digestive juices so that digestion can occur.", "targets": ["digestive", "juices"], "visualKey": "mixing"}, {"id": 15, "label": "Sentence 15", "prompt": "Type the missing science word.", "sentence": "The stomach holds the food for a few hours and mix the food with digestive juices so that digestion can occur.", "targets": ["digestion"], "visualKey": "mixing"}, {"id": 16, "label": "Sentence 16", "prompt": "Type the missing science word.", "sentence": "The stomach holds the food for a few hours and mix the food with digestive juices so that digestion can occur.", "targets": ["holds"], "visualKey": "mixing"}];
+
+function normText(text) {
+  return (text || "").toLowerCase().replace(/[^a-z]/g, "");
+}
+
+function shuffleArray(arr) {
+  const copy = arr.slice();
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function clone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function safeSpeak(text) {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = 0.95;
+  utter.pitch = 1;
+  window.speechSynthesis.speak(utter);
+}
+
+function initialiseScreen(raw) {
+  const tokens = raw.sentence.match(/[A-Za-z]+|[^A-Za-z]+/g) || [raw.sentence];
+  const tokenObjects = [];
+  const occurrences = [];
+  let targetIndex = 0;
+  raw.targets.forEach((t) => {
+    if (normText(t).length < 3) {
+      throw new Error(`Target word "${t}" is shorter than 3 letters.`);
+    }
+  });
+
+  for (const token of tokens) {
+    const isWord = /^[A-Za-z]+$/.test(token);
+    if (isWord && targetIndex < raw.targets.length && normText(token) === normText(raw.targets[targetIndex])) {
+      const len = normText(token).length;
+      occurrences.push({
+        id: occurrences.length,
+        displayWord: token,
+        answerNorm: normText(token),
+        solved: false,
+        revealedCount: 1,
+        wrongAttempts: 0,
+        chanceLimit: Math.max(len - 2, 1),
+        failState: false,
+        inputValue: ""
+      });
+      tokenObjects.push({ type: "occurrence", occId: occurrences.length - 1 });
+      targetIndex += 1;
+    } else {
+      tokenObjects.push({ type: "text", text: token });
+    }
+  }
+
+  if (targetIndex !== raw.targets.length) {
+    throw new Error(`Could not match all target words in sentence ${raw.id}.`);
+  }
+
+  return {
+    ...clone(raw),
+    tokenObjects,
+    occurrences,
+    activeOccIndex: 0,
+    feedback: "",
+    feedbackTone: "neutral",
+    complete: false,
+    completedVisualClueOpen: false
+  };
+}
+
+let gameScreens = [];
+let currentScreenIndex = 0;
+
+function buildGame() {
+  const shuffled = shuffleArray(rawScreens);
+  gameScreens = shuffled.map(initialiseScreen);
+  currentScreenIndex = -1;
+  renderIntro();
+}
+
+function currentScreen() {
+  return gameScreens[currentScreenIndex];
+}
+
+function updateTopProgress(text) {
+  document.getElementById("topProgress").textContent = text;
+}
+
+function faceStage(wrongAttempts, chanceLimit, failState=false) {
+  if (failState) return 8;
+  if (!chanceLimit || wrongAttempts <= 0) return 0;
+  return Math.min(7, Math.max(1, Math.ceil((wrongAttempts / chanceLimit) * 7)));
+}
+
+const penaltyFaces = ["^_^","^‿^","-_-","•︵•",">︵<","ಠ_ಠ","ಠ益ಠ","◣_◢","💥"];
+
+function renderFace(wrongAttempts, chanceLimit, failState=false) {
+  const stage = faceStage(wrongAttempts, chanceLimit, failState);
+  return `
+    <div class="face stage-${stage}" aria-hidden="true">
+      <div class="face-text">${escapeHtml(penaltyFaces[stage])}</div>
+    </div>
+  `;
+}
+
+function clueMarkup(occ) {
+  const chars = occ.displayWord.split("");
+  return chars.map((ch, idx) => {
+    return idx < occ.revealedCount
+      ? `<span class="char">${ch}</span>`
+      : `<span class="line" aria-hidden="true"></span>`;
+  }).join("");
+}
+
+function renderOccurrence(screen, occ, isActive) {
+  if (occ.solved) {
+    return `<span class="solved">${occ.displayWord}</span>`;
+  }
+  if (occ.failState) {
+    return `<span class="flashing">${occ.displayWord}</span>`;
+  }
+  if (isActive) {
+    return `
+      <span class="occ active">
+        <span class="clue" aria-hidden="true">${clueMarkup(occ)}</span>
+        <input
+          class="guess-input"
+          id="activeGuessInput"
+          type="text"
+          value="${escapeHtml(occ.inputValue || "")}"
+          autocomplete="off"
+          autocapitalize="none"
+          spellcheck="false"
+          aria-label="Type the full missing word"
+          maxlength="${Math.max(occ.displayWord.length + 2, 10)}"
+        >
+      </span>
+    `;
+  }
+  return `<span class="occ future"><span class="clue" aria-hidden="true">${clueMarkup(occ)}</span></span>`;
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function sentenceMarkup(screen) {
+  return screen.tokenObjects.map((token) => {
+    if (token.type === "text") {
+      return `<span class="text-token">${escapeHtml(token.text)}</span>`;
+    }
+    const occ = screen.occurrences[token.occId];
+    return renderOccurrence(screen, occ, token.occId === screen.activeOccIndex && !screen.complete);
+  }).join("");
+}
+
+
+function visualSvg(key) {
+  if (key === "transport") {
+    return `
+      <svg viewBox="0 0 420 220" role="img" aria-label="Food moving from the top opening through the food tube into the lower food bag">
+        <rect x="10" y="12" width="400" height="196" rx="24" fill="#f8fafc"/>
+        <circle cx="76" cy="62" r="26" fill="#fde68a" stroke="#f59e0b" stroke-width="4"/>
+        <path d="M63 58 Q76 48 89 58" stroke="#1f2937" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M66 74 Q76 82 86 74" stroke="#1f2937" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M95 73 C122 78, 138 92, 152 114 C170 141, 187 156, 216 171" stroke="#ffb36a" stroke-width="28" fill="none" stroke-linecap="round"/>
+        <path d="M214 167 C248 149, 276 149, 300 166 C320 180, 316 193, 290 193 C250 193, 217 185, 214 167Z" fill="#fca5a5" stroke="#ef4444" stroke-width="4"/>
+        <path d="M98 72 C125 78, 141 92, 155 114 C171 139, 188 153, 213 164" stroke="#0ea5a4" stroke-width="5" fill="none" stroke-dasharray="8 10" class="dot-flow"/>
+        <circle class="pellet" cx="132" cy="95" r="11" fill="#7c3aed"/>
+        <circle class="pellet" cx="132" cy="95" r="4" fill="#ddd6fe"/>
+        <path d="M226 102 L260 102" stroke="#0f766e" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M252 94 L266 102 L252 110" fill="none" stroke="#0f766e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="42" cy="36" r="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+        <text x="42" y="41" font-size="15" text-anchor="middle" fill="#334155" font-weight="800">1</text>
+        <circle cx="170" cy="68" r="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+        <text x="170" y="73" font-size="15" text-anchor="middle" fill="#334155" font-weight="800">2</text>
+        <circle cx="312" cy="140" r="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+        <text x="312" y="145" font-size="15" text-anchor="middle" fill="#334155" font-weight="800">3</text>
+      </svg>
+    `;
+  }
+  if (key === "muscles") {
+    return `
+      <svg viewBox="0 0 420 220" role="img" aria-label="Squeezing wave pushing food down the food tube">
+        <rect x="10" y="12" width="400" height="196" rx="24" fill="#f8fafc"/>
+        <circle cx="58" cy="42" r="18" fill="#fde68a" stroke="#f59e0b" stroke-width="4"/>
+        <path d="M74 49 C101 60, 120 81, 144 109 C165 133, 184 153, 206 174" stroke="#ffb36a" stroke-width="28" fill="none" stroke-linecap="round"/>
+        <path d="M74 49 C101 60, 120 81, 144 109 C165 133, 184 153, 206 174" stroke="#fdba74" stroke-width="16" fill="none" stroke-linecap="round" opacity="0.9"/>
+        <circle class="pellet" cx="114" cy="77" r="11" fill="#7c3aed"/>
+        <circle class="pellet" cx="114" cy="77" r="4" fill="#ddd6fe"/>
+        <ellipse class="squeeze1" cx="106" cy="72" rx="18" ry="25" fill="none" stroke="#ea580c" stroke-width="8"/>
+        <ellipse class="squeeze2" cx="145" cy="110" rx="18" ry="25" fill="none" stroke="#ea580c" stroke-width="8"/>
+        <ellipse class="squeeze3" cx="184" cy="149" rx="18" ry="25" fill="none" stroke="#ea580c" stroke-width="8"/>
+        <path d="M225 145 L256 167" stroke="#0f766e" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M247 159 L259 170 L242 170" fill="none" stroke="#0f766e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M267 151 C299 137, 325 141, 339 157 C350 170, 346 190, 316 191 C286 192, 261 181, 267 151Z" fill="#fca5a5" stroke="#ef4444" stroke-width="4"/>
+      </svg>
+    `;
+  }
+  if (key === "juices") {
+    return `
+      <svg viewBox="0 0 420 220" role="img" aria-label="Liquid added in three places to help break food down">
+        <rect x="10" y="12" width="400" height="196" rx="24" fill="#f8fafc"/>
+        <circle cx="72" cy="62" r="22" fill="#fde68a" stroke="#f59e0b" stroke-width="4"/>
+        <path d="M90 68 C114 76, 126 92, 142 110" stroke="#ffb36a" stroke-width="14" fill="none" stroke-linecap="round"/>
+        <path d="M168 88 C216 69, 240 101, 228 132 C216 160, 173 168, 154 145 C142 130, 144 99, 168 88Z" fill="#fca5a5" stroke="#ef4444" stroke-width="4"/>
+        <path d="M286 96 C314 90, 334 106, 334 126 C334 148, 312 160, 292 155 C283 153, 277 158, 271 163 C255 177, 230 168, 228 145 C226 120, 247 104, 263 108 C273 111, 279 99, 286 96Z" fill="#fecdd3" stroke="#ec4899" stroke-width="4"/>
+        <path d="M251 162 C242 176, 249 187, 274 191" stroke="#ec4899" stroke-width="7" fill="none" stroke-linecap="round"/>
+        <path d="M270 160 C262 175, 270 187, 295 191" stroke="#ec4899" stroke-width="7" fill="none" stroke-linecap="round"/>
+        <path d="M289 158 C282 172, 290 185, 316 189" stroke="#ec4899" stroke-width="7" fill="none" stroke-linecap="round"/>
+        <circle cx="112" cy="86" r="10" fill="#8b5cf6"/>
+        <circle cx="186" cy="125" r="11" fill="#8b5cf6"/>
+        <circle cx="275" cy="124" r="11" fill="#8b5cf6"/>
+        <path class="drop" d="M95 101 C100 91, 103 86, 107 78 C111 86,114 91,119 101 C119 109,113 115,107 115 C101 115,95 109,95 101Z" fill="#38bdf8"/>
+        <path class="drop d2" d="M191 158 C196 148, 199 143, 203 135 C207 143,210 148,215 158 C215 166,209 172,203 172 C197 172,191 166,191 158Z" fill="#38bdf8"/>
+        <path class="drop d3" d="M330 170 C335 160, 338 155, 342 147 C346 155,349 160,354 170 C354 178,348 184,342 184 C336 184,330 178,330 170Z" fill="#38bdf8"/>
+        <path d="M120 101 L156 115" stroke="#0f766e" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M214 157 L247 141" stroke="#0f766e" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M354 170 L370 170" stroke="#0f766e" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+    `;
+  }
+  return `
+    <svg viewBox="0 0 420 220" role="img" aria-label="Food staying in the lower food bag while liquid mixes with it">
+      <rect x="10" y="12" width="400" height="196" rx="24" fill="#f8fafc"/>
+      <path d="M160 46 C228 26, 300 74, 304 129 C307 179, 264 191, 216 189 C158 186, 120 152, 122 107 C124 76, 142 56, 160 46Z" fill="#fca5a5" stroke="#ef4444" stroke-width="5"/>
+      <path d="M145 31 C148 51, 155 61, 171 67" stroke="#fb923c" stroke-width="16" fill="none" stroke-linecap="round"/>
+      <g class="swirl">
+        <path d="M169 120 C189 89, 233 90, 246 121 C257 145, 238 165, 210 165 C185 165, 167 145, 169 120Z" fill="none" stroke="#7c3aed" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="183" cy="103" r="7" fill="#8b5cf6"/>
+        <circle cx="236" cy="128" r="9" fill="#fb7185"/>
+        <circle cx="200" cy="156" r="8" fill="#f59e0b"/>
+      </g>
+      <path class="drop" d="M134 93 C140 82, 144 76, 149 67 C154 76, 158 82, 164 93 C164 103,157 110,149 110 C141 110,134 103,134 93Z" fill="#38bdf8"/>
+      <path class="drop d2" d="M277 93 C283 82, 287 76, 292 67 C297 76, 301 82, 307 93 C307 103,300 110,292 110 C284 110,277 103,277 93Z" fill="#38bdf8"/>
+      <path class="drop d3" d="M247 166 C253 155, 257 149, 262 140 C267 149, 271 155, 277 166 C277 176,270 183,262 183 C254 183,247 176,247 166Z" fill="#38bdf8"/>
+      <circle cx="340" cy="66" r="22" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+      <text x="340" y="72" text-anchor="middle" font-size="16" fill="#334155" font-weight="800">time</text>
+      <path d="M326 95 L300 109" stroke="#0f766e" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M149 109 L179 122" stroke="#0f766e" stroke-width="4" fill="none" stroke-linecap="round"/>
+    </svg>
+  `;
+}
+
+function visualHelperText(key) {
+  if (key === "transport") {
+    return "This clue shows a food lump starting at the top opening, travelling down the food tube, and ending in the lower food bag.";
+  }
+  if (key === "muscles") {
+    return "This clue shows the wall squeezing in a wave from top to bottom. Each squeeze pushes the same food lump farther down.";
+  }
+  if (key === "juices") {
+    return "This clue shows liquid being added in three places. The liquid meets the food in each place and helps break it into smaller parts.";
+  }
+  return "This clue shows food staying in the lower food bag for some time while liquid mixes with it and breaks it down.";
+}
+
+
+function progressValue() {
+  if (!gameScreens.length || currentScreenIndex < 0) return 0;
+  return ((currentScreenIndex) / gameScreens.length) * 100;
+}
+
+function renderPenaltyCard(screen) {
+  const occ = screen.complete ? null : screen.occurrences[screen.activeOccIndex];
+  const wrongAttempts = occ ? occ.wrongAttempts : 0;
+  const chanceLimit = occ ? occ.chanceLimit : 0;
+  const foods = occ
+    ? Array.from({ length: occ.chanceLimit }, (_, idx) => `<div class="food ${idx < occ.wrongAttempts ? "lost" : ""}"></div>`).join("")
+    : "";
+  return `
+    <div class="panel penalty-card">
+      <div class="chip" aria-hidden="true">😶</div>
+      <div class="penalty-stage">
+        <div class="tracker-top">
+          ${renderFace(wrongAttempts, chanceLimit, occ && occ.failState)}
+          <div class="mini-note">${occ ? " " : ""}</div>
+        </div>
+        <div class="tray">
+          <div class="food-row">${foods}</div>
+          <div class="bird ${occ && occ.failState ? "fly" : ""}" aria-hidden="true">🐦</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderIntro() {
+  updateTopProgress("Ready");
+  const host = document.getElementById("screenHost");
+  host.innerHTML = `
+    <div class="screen intro">
+      <div class="hero">
+        <div class="panel">
+          <h2 class="title">Guess the digestive system words</h2>
+          <p class="lead">Each card hides one or more science words inside the sentence. Type the full word when it becomes active. The cards will appear in a mixed order.</p>
+          <div class="button-row" style="margin-top:18px;">
+            <button class="primary" id="startBtn">Start game</button>
+            <button class="secondary" id="introReadBtn">Read aloud</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="visual-wrap">${visualSvg("transport")}</div>
+        </div>
+      </div>
+      <details>
+        <summary>How to play</summary>
+        <div class="details-body howto">
+          <p>Type the whole missing word. Wrong answers reveal one more letter. Solve every missing word on the card before moving on.</p>
+        </div>
+      </details>
+    </div>
+  `;
+  document.getElementById("startBtn").addEventListener("click", () => {
+    currentScreenIndex = 0;
+    renderGameScreen();
+  });
+  document.getElementById("introReadBtn").addEventListener("click", () => {
+    safeSpeak("Guess the digestive system words. Each card hides one or more science words inside the sentence. Type the full word when it becomes active. The cards will appear in a mixed order.");
+  });
+}
+
+function renderGameScreen() {
+  const screen = currentScreen();
+  updateTopProgress(`Card ${currentScreenIndex + 1} / ${gameScreens.length}`);
+  const host = document.getElementById("screenHost");
+  const feedbackClass = screen.feedbackTone || "neutral";
+  const nextDisabled = screen.complete ? "" : "disabled";
+  host.innerHTML = `
+    <div class="screen">
+      <div class="layout">
+        <div class="panel sentence-card">
+          <div class="meta-row">
+            <div class="chip">${escapeHtml(screen.label)}</div>
+            <div class="chip">${currentScreenIndex + 1} / ${gameScreens.length}</div>
+          </div>
+          <div class="prompt">${escapeHtml(screen.prompt)}</div>
+          <div class="sentence-box" id="sentenceBox">${sentenceMarkup(screen)}</div>
+          <div class="feedback ${feedbackClass}" id="feedbackBox">${escapeHtml(screen.feedback || " ")}</div>
+          <div class="action-row">
+            <button class="primary" id="checkBtn" ${screen.complete ? "disabled" : ""}>Check</button>
+            <button class="secondary" id="readBtn">Read aloud</button>
+            <button class="ghost" id="restartBtn">Restart all</button>
+            <button class="primary" id="nextBtn" ${nextDisabled}>Next card</button>
+          </div>
+          <details style="margin-top:14px;">
+            <summary>Visual clue</summary>
+            <div class="details-body">
+              <div class="visual-wrap">${visualSvg(screen.visualKey)}</div>
+              <div class="helper">${visualHelperText(screen.visualKey)}</div>
+            </div>
+          </details>
+          <div class="footer-tools">
+            <div class="chip">Progress</div>
+            <div style="flex:1 1 220px;">
+              <div class="progressbar"><div style="width:${((currentScreenIndex) / gameScreens.length) * 100}%"></div></div>
+            </div>
+          </div>
+          <details style="margin-top:14px;">
+            <summary>How to play</summary>
+            <div class="details-body howto">
+              <p>Type the full word inside the sentence. Blank tries do not count. A wrong answer reveals one more letter for the active word only.</p>
+            </div>
+          </details>
+        </div>
+        <div class="aside">
+          ${renderPenaltyCard(screen)}
+        </div>
+      </div>
+    </div>
+  `;
+
+  const input = document.getElementById("activeGuessInput");
+  if (input) {
+    input.focus();
+    input.addEventListener("input", (e) => {
+      const s = currentScreen();
+      if (!s || s.complete) return;
+      const occ = s.occurrences[s.activeOccIndex];
+      occ.inputValue = e.target.value;
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        checkActiveWord();
+      }
+    });
+  }
+
+  document.getElementById("checkBtn").addEventListener("click", checkActiveWord);
+  document.getElementById("readBtn").addEventListener("click", () => {
+    safeSpeak(readableSentence(screen));
+  });
+  document.getElementById("restartBtn").addEventListener("click", () => {
+    window.speechSynthesis && window.speechSynthesis.cancel();
+    buildGame();
+  });
+  document.getElementById("nextBtn").addEventListener("click", () => {
+    if (!currentScreen().complete) return;
+    if (currentScreenIndex < gameScreens.length - 1) {
+      currentScreenIndex += 1;
+      renderGameScreen();
+    } else {
+      renderComplete();
+    }
+  });
+}
+
+function readableSentence(screen) {
+  const words = screen.tokenObjects.map((token) => {
+    if (token.type === "text") return token.text;
+    const occ = screen.occurrences[token.occId];
+    return occ.solved || occ.failState ? occ.displayWord : "blank";
+  }).join("");
+  return `${screen.prompt}. ${words}`;
+}
+
+function checkActiveWord() {
+  const screen = currentScreen();
+  if (!screen || screen.complete) return;
+  const occ = screen.occurrences[screen.activeOccIndex];
+  if (!occ || occ.failState) return;
+
+  const input = document.getElementById("activeGuessInput");
+  const rawValue = input ? input.value : occ.inputValue || "";
+  occ.inputValue = rawValue;
+  const trimmed = rawValue.trim();
+
+  if (!trimmed) {
+    screen.feedback = "Type the whole word.";
+    screen.feedbackTone = "neutral";
+    renderGameScreen();
+    return;
+  }
+
+  if (/\s/.test(trimmed)) {
+    screen.feedback = "One word only.";
+    screen.feedbackTone = "warn";
+    renderGameScreen();
+    return;
+  }
+
+  if (normText(trimmed) === occ.answerNorm) {
+    occ.solved = true;
+    occ.inputValue = "";
+    screen.feedback = screen.activeOccIndex === screen.occurrences.length - 1 ? "Well done." : "Good. Keep going.";
+    screen.feedbackTone = "ok";
+    const next = screen.occurrences.findIndex((item) => !item.solved);
+    if (next === -1) {
+      screen.complete = true;
+    } else {
+      screen.activeOccIndex = next;
+    }
+    renderGameScreen();
+    return;
+  }
+
+  occ.wrongAttempts += 1;
+  occ.revealedCount = Math.min(occ.displayWord.length, occ.revealedCount + 1);
+  occ.inputValue = "";
+  if (occ.wrongAttempts >= occ.chanceLimit) {
+    occ.failState = true;
+    screen.feedback = "Watch this word.";
+    screen.feedbackTone = "warn";
+    renderGameScreen();
+    setTimeout(() => {
+      const s = currentScreen();
+      if (!s) return;
+      const currentOcc = s.occurrences[s.activeOccIndex];
+      if (!currentOcc) return;
+      currentOcc.failState = false;
+      currentOcc.wrongAttempts = 0;
+      currentOcc.revealedCount = 1;
+      currentOcc.inputValue = "";
+      s.feedback = "Try again.";
+      s.feedbackTone = "neutral";
+      renderGameScreen();
+    }, 10000);
+  } else {
+    screen.feedback = "Try again.";
+    screen.feedbackTone = "warn";
+    renderGameScreen();
+  }
+}
+
+function renderComplete() {
+  updateTopProgress("Finished");
+  const host = document.getElementById("screenHost");
+  const doneCards = gameScreens.map((screen, idx) => `<div class="finish-chip">Card ${idx + 1}</div>`).join("");
+  host.innerHTML = `
+    <div class="screen complete">
+      <div class="panel">
+        <h2 class="title">You finished all ${gameScreens.length} cards.</h2>
+        <p class="lead">Nice work. You can play again for a fresh order.</p>
+        <div class="button-row" style="margin-top:18px;">
+          <button class="primary" id="playAgainBtn">Play again</button>
+          <button class="secondary" id="finishReadBtn">Read aloud</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="grid-finish">${doneCards}</div>
+      </div>
+    </div>
+  `;
+  document.getElementById("playAgainBtn").addEventListener("click", () => {
+    buildGame();
+  });
+  document.getElementById("finishReadBtn").addEventListener("click", () => {
+    safeSpeak(`You finished all ${gameScreens.length} cards. You can play again for a fresh order.`);
+  });
+}
+
+buildGame();
+</script>
+</body>
+</html>
